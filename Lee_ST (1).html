@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-5">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lee's Student Progress Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define a classic color palette with shades of charcoal grey and off-white */
+        :root {
+            --color-primary: #2C3E50; /* Darker Charcoal Blue-Grey for headings/primary elements */
+            --primary-rgb: 44, 62, 80; /* RGB values for --color-primary for use in rgba() */
+            --color-secondary: #BDC3C7; /* Lighter Muted Grey for accents/borders, inactive buttons background */
+            --color-button-normal: #7F8C8D; /* Medium Grey for inactive tabs/general actions */
+            --color-button-hover: #607d8b; /* Darker grey button on hover */
+            --color-button-active: #4A6372; /* A more distinct, slightly lighter charcoal blue for active tabs/important buttons */
+            --color-text-dark: #2c3e50; /* Dark text */
+            --color-text-light: #ecf0f1; /* Light text for dark backgrounds */
+            --color-background-light: #ECF0F1; /* Off-white for general background */
+            --color-background-section: #FEFEFE; /* Slightly whiter for sections */
+            --color-success: #27AE60; /* Green for success/good status */
+            --color-warning: #F39C12; /* Orange for warning/fair status */
+            --color-danger: #C0392B; /* Red for danger/needs improvement */
+            --color-info: #3498DB; /* Blue for info/neutral/bonus */
+            --color-accent-gold: #B8860B; /* Dark Goldenrod for subtle highlights */
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--color-background-light);
+            min-height: 100vh;
+            color: var(--color-text-dark);
+            
+            /* Layered background for classical side decoration and overall ambiance */
+            background-image:
+                /* Subtle diagonal pattern inspired by Greek key motifs */
+                repeating-linear-gradient(45deg, rgba(var(--primary-rgb), 0.03) 0%, rgba(var(--primary-rgb), 0.03) 8px, transparent 8px, transparent 24px),
+                repeating-linear-gradient(-45deg, rgba(var(--primary-rgb), 0.03) 0%, rgba(var(--primary-rgb), 0.03) 8px, transparent 8px, transparent 24px),
+                
+                /* Fine horizontal lines as a general texture */
+                repeating-linear-gradient(0deg, rgba(200,200,200,0.04), rgba(200,200,200,0.04) 1px, transparent 1px, transparent 20px),
+                
+                /* Subtle radial gradients for general page depth and soft lighting */
+                radial-gradient(at 50% 100%, rgba(255,255,255,0.05), transparent 70%),
+                radial-gradient(at 0% 0%, rgba(255,255,255,0.05), transparent 70%);
+            
+            background-size: 
+                60px 60px, /* Diagonal pattern 1 */
+                60px 60px, /* Diagonal pattern 2 */
+                100% 100%, /* Horizontal lines */
+                100% 100%, 100% 100%; /* Radial gradients */
+
+            background-position: 
+                0 0, 0 0, /* All patterns start from top-left, repeat across */
+                center, 
+                center, center; 
+
+            background-attachment: fixed; /* Keep background fixed when scrolling */
+            background-repeat: repeat; /* All layers repeat across the entire body */
+        }
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--color-background-light);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-secondary);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-button-normal);
+        }
+
+        /* Enhanced sticky header and column styles */
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: var(--color-background-light); /* Ensure background is set */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+        }
+        .sticky-header th:first-child { /* Specific for the sticky corner */
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            background-color: var(--color-background-section); /* Ensure it covers content when scrolling horizontally */
+            z-index: 5; /* Ensure it stays above scrolling content */
+            border-right: 1px solid var(--color-secondary);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+        }
+        /* Ensure the main content div has a solid background to sit on top of the body pattern */
+        .max-w-6xl.mx-auto {
+            background-color: white; /* Make sure the main content is opaque to cover background patterns */
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.2), /* Main shadow */
+                0 0 0 1px rgba(0, 0, 0, 0.05), /* Thin outer border for sharpness */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5); /* Inner highlight for depth */
+            border: 1px solid var(--color-secondary); /* A clean border */
+            position: relative; /* Essential for z-index */
+            z-index: 1; /* Puts it above the body background */
+        }
+
+        /* Dropdown specific styles for color-coding */
+        .status-na { background-color: var(--color-background-light); color: var(--color-text-dark); }
+        .status-excellent { background-color: var(--color-success); color: var(--color-text-light); }
+        .status-good { background-color: #2ecc71; color: var(--color-text-light); } /* Slightly lighter green */
+        .status-fair { background-color: var(--color-warning); color: var(--color-text-light); }
+        .status-needs-improvement { background-color: #e67e22; color: var(--color-text-light); } /* Darker orange */
+        .status-not-done { background-color: var(--color-danger); color: var(--color-text-light); }
+        .status-low { background-color: var(--color-danger); color: var(--color-text-light); }
+        .status-developing { background-color: #e74c3c; color: var(--color-text-light); } /* Slightly lighter red */
+        .status-strong { background-color: #2980b9; color: var(--color-text-light); } /* Darker blue */
+        .status-complete { background-color: var(--color-success); color: var(--color-text-light); }
+        .status-partial { background-color: var(--color-warning); color: var(--color-text-light); }
+        .status-bonus { background-color: var(--color-info); color: var(--color-text-light); } /* Use info blue for bonus */
+        
+        /* Font size adjustments */
+        .text-xs { font-size: 0.8rem; }
+        .text-sm { font-size: 0.9rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .text-5xl { font-size: 3rem; }
+
+        /* Collapsible section styles */
+        .section-content {
+            transition: max-height 0.3s ease-out; /* Smooth transition for collapsing */
+            overflow: hidden; /* Hide overflowing content during collapse */
+        }
+
+        .section-content.collapsed {
+            max-height: 0 !important; /* Forces the content to collapse */
+        }
+        .collapse-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem; /* Small clickable area */
+            height: 2rem;
+            border-radius: 50%; /* Circular button */
+            background-color: var(--color-secondary);
+            color: var(--color-text-light);
+            font-size: 1.25rem; /* Larger arrow */
+            font-weight: bold;
+            line-height: 1; /* Center the symbol */
+            cursor: pointer;
+            border: none;
+            margin-left: 1rem;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+        .collapse-toggle:hover {
+            background-color: var(--color-button-hover);
+            transform: scale(1.1);
+        }
+
+        /* Enhanced form elements: inputs, textareas, selects */
+        input[type="text"],
+        textarea,
+        select {
+            background-color: #ffffff; /* Ensure white background for content */
+            border: 1px solid var(--color-secondary);
+            border-radius: 0.5rem; /* Tailwind rounded-lg */
+            padding: 0.75rem; /* Tailwind p-3 */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Subtle inset shadow */
+            transition: all 0.2s ease-in-out;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--color-primary);
+            box-shadow: 
+                0 0 0 0.15rem rgba(var(--primary-rgb), 0.2), /* Focus ring */
+                inset 0 1px 3px rgba(0,0,0,0.15); /* Slightly stronger inset shadow */
+            outline: none;
+        }
+        
+        /* Custom styling for select elements (to apply custom arrow) */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%232C3E50'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em; /* Adjust size of SVG arrow */
+            padding-right: 2.5rem; /* Make space for the arrow */
+            background-color: linear-gradient(to bottom, #fefefe, #eef1f4); /* Subtle gradient for select */
+        }
+        select.status-na, select.status-excellent, select.status-good, select.status-fair, 
+        select.status-needs-improvement, select.status-not-done, select.status-low, 
+        select.status-developing, select.status-strong, select.status-complete, 
+        select.status-partial, select.status-bonus {
+            background-image: none; /* Remove default arrow for colored selects to simplify */
+        }
+
+
+        /* Enhanced Button Styles */
+        button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        button:hover {
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+        }
+
+        .bg-[var(--color-primary)] {
+            background: linear-gradient(to bottom, var(--color-primary), #202c3b);
+        }
+        .hover\:bg-[var(--color-button-hover)] {
+            background: linear-gradient(to bottom, var(--color-button-hover), #455a64);
+        }
+        .bg-red-600 {
+            background: linear-gradient(to bottom, #DC2626, #B91C1C);
+        }
+        .hover\:bg-red-700 {
+            background: linear-gradient(to bottom, #B91C1C, #991B1B);
+        }
+        .bg-gray-300 {
+            background: linear-gradient(to bottom, #D1D5DB, #BFC5CE);
+        }
+        .hover\:bg-gray-400 {
+            background: linear-gradient(to bottom, #BFC5CE, #A3A3A3);
+        }
+        .active-tab {
+            background: linear-gradient(to bottom, var(--color-button-active), #384e5c);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Enhanced section styling */
+        section {
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.1), /* Outer shadow */
+                inset 0 0 0 1px var(--color-secondary); /* Inner border for definition */
+            border-radius: 0.75rem; /* Consistent rounded corners */
+        }
+
+        /* Styles for the dancing heads */
+        .dancing-heads-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align to the bottom of the container */
+            gap: 20px;
+            padding: 20px 0;
+            margin-top: 40px; /* Provide some space from the main content */
+        }
+
+        .pixel-head {
+            width: 150px; /* Based on visual estimation from the image */
+            height: 200px; /* Based on visual estimation from the image */
+            cursor: pointer;
+            border-radius: 8px; /* Slightly rounded corners for the heads */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-out; /* Smooth transition for dancing */
+            filter: grayscale(10%); /* Subtle grayscale to make them fit the classic theme */
+            transform-origin: bottom center; /* Pivot point for the dance */
+            background-size: cover; /* Ensure placeholder images fill the area */
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Dance animation */
+        @keyframes dance {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-5deg); }
+            50% { transform: translateY(0) rotate(5deg); }
+            75% { transform: translateY(-10px) rotate(-3deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        .pixel-head.dancing {
+            animation: dance 0.8s ease-in-out;
+        }
+
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-xl p-6 sm:p-8 lg:p-10 border border-gray-200">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-[var(--color-primary)] mb-8 tracking-tight">
+            🏛️ Lee's Student Progress Tracker
+        </h1>
+
+        <!-- Class Management Section -->
+        <section id="manageClassesSection" data-section="manageClasses" class="mb-10 p-6 bg-[var(--color-background-section)] rounded-lg shadow-inner border border-[var(--color-secondary)]">
+            <h2 class="text-2xl sm:text-3xl font-bold text-[var(--color-primary)] mb-4 flex items-center">
+                Manage Classes
+                <button class="collapse-toggle" data-target="manageClassesContent">
+                    <span class="arrow-icon">&#9660;</span>
+                </button>
+            </h2>
+            <div id="manageClassesContent" class="section-content">
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <input type="text" id="newClassName" placeholder="Enter new class name"
+                           class="flex-grow p-3 border border-[var(--color-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-lg bg-white">
+                    <button id="addClassBtn"
+                            class="px-6 py-3 bg-[var(--color-primary)] text-white font-semibold rounded-lg shadow-md hover:bg-[var(--color-button-hover)] transition duration-300 ease-in-out transform hover:scale-105">
+                        Add Class
+                    </button>
+                </div>
+                <div class="max-h-40 overflow-y-auto border border-[var(--color-secondary)] rounded-lg bg-white">
+                    <table id="classListTable" class="min-w-full divide-y divide-[var(--color-secondary)]">
+                        <thead class="bg-[var(--color-background-light)] sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-base font-medium text-[var(--color-primary)] uppercase tracking-wider rounded-tl-lg">
+                                    Class Name
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-right text-base font-medium text-[var(--color-primary)] uppercase tracking-wider rounded-tr-lg">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-[var(--color-secondary)]">
+                            <!-- Class rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Student Roster Section -->
+        <section id="studentRosterSection" data-section="studentRoster" class="mb-10 p-6 bg-[var(--color-background-section)] rounded-lg shadow-inner border border-[var(--color-secondary)]">
+            <h2 class="text-2xl sm:text-3xl font-bold text-[var(--color-primary)] mb-4 flex items-center">
+                Student Roster
+                <button class="collapse-toggle" data-target="studentRosterContent">
+                    <span class="arrow-icon">&#9660;</span>
+                </button>
+            </h2>
+            <div id="studentRosterContent" class="section-content">
+                <div class="mb-6 border border-gray-300 rounded-lg p-4 bg-gray-50">
+                    <p class="text-lg font-semibold mb-2">Add Students from Roster:</p>
+                    <textarea id="rosterInput" rows="5" placeholder="Paste student names here, one per line (e.g., John Doe, Jane Smith)"
+                              class="w-full p-2 border border-[var(--color-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-base bg-white mb-3"></textarea>
+                    <label for="rosterClassSelect" class="block text-gray-700 text-base font-bold mb-2">Assign to Classes (Ctrl/Cmd+Click for multiple):</label>
+                    <select id="rosterClassSelect" multiple
+                            class="p-3 border border-[var(--color-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-base bg-white w-full h-24 mb-3">
+                        <!-- Classes for roster assignment will be dynamically inserted here -->
+                    </select>
+                    <button id="loadRosterBtn"
+                            class="px-6 py-3 bg-[var(--color-primary)] text-white font-semibold rounded-lg shadow-md hover:bg-[var(--color-button-hover)] transition duration-300 ease-in-out transform hover:scale-105 w-full">
+                        Load Roster
+                    </button>
+                </div>
+
+                <h3 class="text-xl font-bold text-[var(--color-primary)] mb-4">Add Individual Student:</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <input type="text" id="newStudentName" placeholder="Enter student name"
+                           class="col-span-2 p-3 border border-[var(--color-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-lg bg-white">
+                    <select id="studentClassSelect" multiple
+                            class="p-3 border border-[var(--color-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-lg bg-white h-full min-h-[48px]">
+                        <option value="">Select Classes (Ctrl/Cmd+Click)</option>
+                        <!-- Classes for individual assignment will be dynamically inserted here -->
+                    </select>
+                    <button id="addStudentBtn"
+                            class="col-span-3 sm:col-span-1 px-6 py-3 bg-[var(--color-primary)] text-white font-semibold rounded-lg shadow-md hover:bg-[var(--color-button-hover)] transition duration-300 ease-in-out transform hover:scale-105">
+                        Add Student
+                    </button>
+                </div>
+                
+                <div class="max-h-60 overflow-y-auto border border-[var(--color-secondary)] rounded-lg bg-white mb-4">
+                    <table id="studentRosterTable" class="min-w-full divide-y divide-[var(--color-secondary)]">
+                        <thead class="bg-[var(--color-background-light)] sticky-header">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-base font-medium text-[var(--color-primary)] uppercase tracking-wider rounded-tl-lg">
+                                    <input type="checkbox" id="selectAllStudentsCheckbox" class="form-checkbox h-4 w-4 text-[var(--color-primary)] transition duration-150 ease-in-out">
+                                </th>
+                                <th scope="col" class="sticky-column px-6 py-3 text-base font-medium text-[var(--color-primary)] uppercase tracking-wider">
+                                    Student Name
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-base font-medium text-[var(--color-primary)] uppercase tracking-wider">
+                                    Assigned Classes
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-right text-base font-medium text-[var(--color-primary)] uppercase tracking-wider rounded-tr-lg">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-[var(--color-secondary)]">
+                            <!-- Student rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="deleteSelectedBtn" disabled
+                        class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Delete Selected Students
+                </button>
+            </div>
+        </section>
+
+        <!-- Tracking Data Section -->
+        <section id="trackingDataSection" data-section="trackingData" class="p-6 bg-[var(--color-background-section)] rounded-lg shadow-inner border border-[var(--color-secondary)]">
+            <h2 class="text-2xl sm:text-3xl font-bold text-[var(--color-primary)] mb-4 flex items-center">
+                Tracking Data
+                <button class="collapse-toggle" data-target="trackingDataContent">
+                    <span class="arrow-icon">&#9660;</span>
+                </button>
+            </h2>
+            <div id="trackingDataContent" class="section-content">
+                <!-- Filter by Class section moved here -->
+                <div class="mb-6">
+                    <label for="classFilterSelect" class="block text-[var(--color-text-dark)] text-base font-bold mb-2">Filter by Class:</label>
+                    <select id="classFilterSelect"
+                            class="p-3 border border-[var(--color-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-lg bg-white w-full sm:w-1/2 lg:w-1/3" onchange="renderRoster(); renderTrackingTable(activeTab);">
+                        <option value="all">All Classes</option>
+                        <!-- Class filter options will be dynamically inserted here -->
+                    </select>
+                </div>
+                
+                <!-- Tabs for different tracking types -->
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button id="tabParticipation" class="tab-button px-6 py-3 rounded-lg font-semibold shadow-md transition duration-300 ease-in-out bg-[var(--color-button-active)] text-white hover:bg-[var(--color-primary)] active-tab" data-type="participation">
+                        Participation
+                    </button>
+                    <button id="tabNoteTaking" class="tab-button px-6 py-3 rounded-lg font-semibold shadow-md transition duration-300 ease-in-out bg-[var(--color-button-normal)] text-white hover:bg-[var(--color-button-hover)]" data-type="noteTaking">
+                        Note-Taking
+                    </button>
+                    <button id="tabBellWork" class="tab-button px-6 py-3 rounded-lg font-semibold shadow-md transition duration-300 ease-in-out bg-[var(--color-button-normal)] text-white hover:bg-[var(--color-button-hover)]" data-type="bellWork">
+                        Bell Work
+                    </button>
+                </div>
+
+                <!-- Tracking Table Container -->
+                <div id="trackingTableContainer" class="overflow-x-auto rounded-lg border border-[var(--color-secondary)] shadow-md bg-white">
+                    <!-- Dynamic tracking table will be inserted here -->
+                    <p class="p-4 text-gray-500 text-center text-base">Select a tab above to view and edit tracking data.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-auto shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                        Confirm Action
+                    </h3>
+                    <div class="mt-2">
+                        <p class="text-base text-gray-500" id="modal-message"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirmButton" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Confirm
+                </button>
+                <button type="button" id="cancelButton" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="studentDetailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-2xl mx-auto shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
+                <h3 class="text-2xl font-bold text-[var(--color-primary)]" id="detailsModalStudentName">Student Details</h3>
+                <button id="closeDetailsModal" class="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            </div>
+            <div class="overflow-y-auto flex-grow pr-2">
+                <div class="mb-4">
+                    <p class="text-lg font-semibold mb-2">Assigned Classes:</p>
+                    <div id="detailsModalAssignedClasses" class="flex flex-wrap gap-2 mb-4">
+                        <!-- Assigned classes will be rendered here -->
+                    </div>
+                    <label for="detailsModalClassSelect" class="block text-gray-700 text-base font-bold mb-2">Manage Classes:</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="detailsModalClassSelect" multiple
+                                class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-base bg-white h-24">
+                            <!-- All classes will be populated here -->
+                        </select>
+                        <button id="updateStudentClassesBtn"
+                                class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg shadow-md hover:bg-[var(--color-button-hover)] transition duration-300 ease-in-out transform hover:scale-105 sm:self-start">
+                            Update Classes
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-lg font-semibold mb-2">General Notes:</p>
+                    <textarea id="detailsModalGeneralNotes" rows="4"
+                              class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-base bg-white"></textarea>
+                    <button id="saveGeneralNotesBtn"
+                            class="mt-2 px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg shadow-md hover:bg-[var(--color-button-hover)] transition duration-300 ease-in-out transform hover:scale-105">
+                        Save Notes
+                    </button>
+                </div>
+
+                <h4 class="text-xl font-semibold text-[var(--color-primary)] mb-3">Performance Record:</h4>
+                <div id="detailsModalPerformanceRecord" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Performance records will be dynamically generated here -->
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 text-right">
+                <button id="closeDetailsModalBottom" class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition duration-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Notes Modal -->
+    <div id="classNotesModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-xl mx-auto shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
+                <h3 class="text-2xl font-bold text-[var(--color-primary)]" id="classNotesModalClassName">Class Notes</h3>
+                <button id="closeClassNotesModal" class="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            </div>
+            <div class="overflow-y-auto flex-grow pr-2">
+                <p class="text-lg font-semibold mb-2">Notes for this class:</p>
+                <textarea id="classNotesTextarea" rows="8"
+                          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-base bg-white"></textarea>
+                <button id="saveClassNotesBtn"
+                        class="mt-4 px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg shadow-md hover:bg-[var(--color-button-hover)] transition duration-300 ease-in-out transform hover:scale-105">
+                    Save Class Notes
+                </button>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 text-right">
+                <button class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition duration-300" onclick="document.getElementById('classNotesModal').style.display='none';">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dancing Heads Section -->
+    <div class="dancing-heads-container">
+        <div class="pixel-head" style="background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='); background-size: 150px 600px;"></div>
+        <div class="pixel-head" style="background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='); background-size: 150px 600px; background-position: 0 -200px;"></div>
+        <div class="pixel-head" style="background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='); background-size: 150px 600px; background-position: 0 -400px;"></div>
+    </div>
+
+
+    <script>
+        // Global data store, initialized from local storage or empty if none
+        let studentData = {
+            classes: [], // Array of objects: { name: 'ClassName', notes: '' }
+            students: [], // Array of objects: { id: 'uuid', name: 'Student Name', classNames: ['Class Name'], generalNotes: '' }
+            participation: {}, // { 'studentId': { 'Aug 1-15': 'Excellent' } }
+            noteTaking: {},    // { 'studentId': { 'Aug 1-15': 'Excellent' } }
+            bellWork: {}       // { 'studentId': { 'Aug 2025': 'Excellent' } }
+        };
+
+        // DOM elements
+        const newClassNameInput = document.getElementById('newClassName');
+        const addClassBtn = document.getElementById('addClassBtn');
+        const classListTableBody = document.querySelector('#classListTable tbody');
+
+        const rosterInput = document.getElementById('rosterInput');
+        const rosterClassSelect = document.getElementById('rosterClassSelect');
+        const loadRosterBtn = document.getElementById('loadRosterBtn');
+
+        const newStudentNameInput = document.getElementById('newStudentName');
+        const studentClassSelect = document.getElementById('studentClassSelect'); // Now multi-select
+        const addStudentBtn = document.getElementById('addStudentBtn');
+
+        const classFilterSelect = document.getElementById('classFilterSelect');
+        const studentRosterTableBody = document.querySelector('#studentRosterTable tbody');
+        const trackingTableContainer = document.getElementById('trackingTableContainer');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const studentDetailsModal = document.getElementById('studentDetailsModal');
+        const detailsModalStudentName = document.getElementById('detailsModalStudentName');
+        const detailsModalAssignedClasses = document.getElementById('detailsModalAssignedClasses');
+        const detailsModalClassSelect = document.getElementById('detailsModalClassSelect'); // Multi-select in modal
+        const detailsModalGeneralNotes = document.getElementById('detailsModalGeneralNotes');
+        const saveGeneralNotesBtn = document.getElementById('saveGeneralNotesBtn');
+        const updateStudentClassesBtn = document.getElementById('updateStudentClassesBtn');
+        const detailsModalPerformanceRecord = document.getElementById('detailsModalPerformanceRecord');
+        const closeDetailsModal = document.getElementById('closeDetailsModal');
+        const closeDetailsModalBottom = document.getElementById('closeDetailsModalBottom');
+
+        const classNotesModal = document.getElementById('classNotesModal');
+        const classNotesModalClassName = document.getElementById('classNotesModalClassName');
+        const classNotesTextarea = document.getElementById('classNotesTextarea');
+        const saveClassNotesBtn = document.getElementById('saveClassNotesBtn');
+        const closeClassNotesModal = document.getElementById('closeClassNotesModal');
+
+        const selectAllStudentsCheckbox = document.getElementById('selectAllStudentsCheckbox');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+        // Collapsible section elements
+        const collapseToggles = document.querySelectorAll('.collapse-toggle');
+
+        const pixelHeads = document.querySelectorAll('.pixel-head');
+
+
+        let activeTab = 'participation'; // Default active tab
+        let selectedStudentIdForDetails = null; // Store the ID of the student currently viewed in the modal
+        let selectedClassNameForNotes = null; // Store the class name for the notes modal
+        let selectedStudentIdsForDeletion = new Set(); // Stores IDs of students selected for mass deletion
+
+        // Dropdown options for tracking categories with corresponding classes for color-coding
+        const noteTakingOptions = [
+            { value: 'N/A', class: 'status-na' },
+            { value: 'Excellent', class: 'status-excellent' },
+            { value: 'Good', class: 'status-good' },
+            { value: 'Fair', class: 'status-fair' },
+            { value: 'Needs Improvement', class: 'status-needs-improvement' },
+            { value: 'Not Done', class: 'status-not-done' }
+        ];
+        const participationOptions = [
+            { value: 'N/A', class: 'status-na' },
+            { value: '8 (Low)', class: 'status-low' },
+            { value: '16 (Developing)', class: 'status-developing' },
+            { value: '24 (Good)', class: 'status-good' },
+            { value: '32 (Strong)', class: 'status-strong' },
+            { value: '40 (Excellent)', class: 'status-excellent' }
+        ];
+        const bellWorkOptions = [
+            { value: 'N/A', class: 'status-na' },
+            { value: 'Excellent', class: 'status-excellent' },
+            { value: 'Good', class: 'status-good' },
+            { value: 'Fair', class: 'status-fair' },
+            { value: 'Needs Improvement', class: 'status-needs-improvement' },
+            { value: 'Not Done', class: 'status-not-done' }
+        ];
+
+        // Helper to get options array by type
+        function getOptionsArray(type) {
+            switch (type) {
+                case 'noteTaking': return noteTakingOptions;
+                case 'participation': return participationOptions;
+                case 'bellWork': return bellWorkOptions;
+                default: return [];
+            }
+        }
+
+        // --- Data Persistence Functions ---
+
+        /**
+         * Saves the current studentData object to local storage.
+         */
+        function saveData() {
+            try {
+                localStorage.setItem('studentTrackingData', JSON.stringify(studentData));
+                console.log('Data saved successfully!');
+            } catch (e) {
+                console.error('Error saving data to local storage:', e);
+            }
+        }
+
+        /**
+         * Loads studentData from local storage.
+         * @returns {Object} The loaded data or an empty structure if no data is found.
+         */
+        function loadData() {
+            try {
+                const storedData = localStorage.getItem('studentTrackingData');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    // Ensure all expected top-level keys exist and handle potential old data formats
+                    return {
+                        classes: parsedData.classes.map(c => typeof c === 'string' ? { name: c, notes: '' } : c) || [], // Convert old string classes to objects
+                        students: parsedData.students.map(s => ({
+                            id: s.id || crypto.randomUUID(), // Ensure old students have IDs
+                            name: s.name,
+                            classNames: Array.isArray(s.classNames) ? s.classNames : (s.className ? [s.className] : []), // Convert old single className to array
+                            generalNotes: s.generalNotes || ''
+                        })) || [],
+                        participation: parsedData.participation || {},
+                        noteTaking: parsedData.noteTaking || {},
+                        bellWork: parsedData.bellWork || {}
+                    };
+                }
+            } catch (e) {
+                console.error('Error loading data from local storage:', e);
+            }
+            return {
+                classes: [],
+                students: [],
+                participation: {},
+                noteTaking: {},
+                bellWork: {}
+            };
+        }
+
+        // --- Class Management Functions ---
+
+        /**
+         * Adds a new class.
+         * @param {string} className - The name of the class to add.
+         */
+        function addClass(className) {
+            className = className.trim();
+            if (className && !studentData.classes.some(c => c.name === className)) {
+                studentData.classes.push({ name: className, notes: '' });
+                studentData.classes.sort((a, b) => a.name.localeCompare(b.name)); // Keep classes sorted alphabetically
+                saveData();
+                renderClasses();
+                newClassNameInput.value = ''; // Clear input
+            } else if (className) {
+                alert('Class already exists!');
+            }
+        }
+
+        /**
+         * Removes a class and updates associated students and their data.
+         * @param {string} className - The name of the class to remove.
+         */
+        function removeClass(className) {
+            // Remove from classes array
+            studentData.classes = studentData.classes.filter(c => c.name !== className);
+
+            // Update students: remove this class from their classNames array
+            // And collect IDs of students who are no longer in any class
+            const studentIdsToCompletelyRemove = [];
+            studentData.students.forEach(student => {
+                student.classNames = student.classNames.filter(c => c !== className);
+                if (student.classNames.length === 0) {
+                    studentIdsToCompletelyRemove.push(student.id);
+                }
+            });
+
+            // Remove students who are no longer in any class
+            studentData.students = studentData.students.filter(student => student.classNames.length > 0);
+
+            // Remove tracking data for completely removed students
+            studentIdsToCompletelyRemove.forEach(id => {
+                delete studentData.participation[id];
+                delete studentData.noteTaking[id];
+                delete studentData.bellWork[id];
+            });
+
+            saveData();
+            renderClasses();
+            renderRoster(); // Re-render roster as students might be removed or updated
+            renderTrackingTable(activeTab); // Re-render tracking table
+            if (studentDetailsModal.style.display === 'flex') { // If modal is open, re-render its class list
+                showStudentDetails(selectedStudentIdForDetails);
+            }
+        }
+
+        /**
+         * Renders (or re-renders) the class list table and populates class dropdowns.
+         */
+        function renderClasses() {
+            classListTableBody.innerHTML = '';
+            studentClassSelect.innerHTML = '<option value="">Select Classes (Ctrl/Cmd+Click)</option>';
+            rosterClassSelect.innerHTML = ''; // Clear for roster select
+            detailsModalClassSelect.innerHTML = ''; // Clear for modal
+            classFilterSelect.innerHTML = '<option value="all">All Classes</option>';
+
+            if (studentData.classes.length === 0) {
+                classListTableBody.innerHTML = `<tr><td colspan="2" class="px-6 py-4 text-center text-gray-500 text-base">No classes added yet.</td></tr>`;
+                return;
+            }
+
+            studentData.classes.forEach(classObj => {
+                const className = classObj.name;
+                // Class List Table
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-[var(--color-background-light)]';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-base font-medium text-[var(--color-text-dark)]">${className}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-base font-medium">
+                        <button class="view-class-notes-btn text-[var(--color-primary)] hover:text-black font-semibold transition duration-200 mr-2" data-class="${className}">
+                            Notes
+                        </button>
+                        <button class="remove-class-btn text-red-600 hover:text-red-800 font-semibold transition duration-200" data-class="${className}">
+                            Remove
+                        </button>
+                    </td>
+                `;
+                classListTableBody.appendChild(row);
+
+                // Add Student Class Select (individual add)
+                const studentOption = document.createElement('option');
+                studentOption.value = className;
+                studentOption.textContent = className;
+                studentClassSelect.appendChild(studentOption);
+
+                // Roster Class Select
+                const rosterOption = document.createElement('option');
+                rosterOption.value = className;
+                rosterOption.textContent = className;
+                rosterClassSelect.appendChild(rosterOption);
+
+
+                // Details Modal Class Select (multiple)
+                const modalOption = document.createElement('option');
+                modalOption.value = className;
+                modalOption.textContent = className;
+                detailsModalClassSelect.appendChild(modalOption);
+
+                // Class Filter Select
+                const filterOption = document.createElement('option');
+                filterOption.value = className;
+                filterOption.textContent = className;
+                classFilterSelect.appendChild(filterOption);
+            });
+
+            // Set filter select to current value if it still exists
+            if (!studentData.classes.some(c => c.name === classFilterSelect.value)) {
+                classFilterSelect.value = 'all';
+            }
+        }
+
+        // --- Class Notes Modal Functions ---
+        function showClassNotes(className) {
+            selectedClassNameForNotes = className;
+            classNotesModalClassName.textContent = `Notes for: ${className}`;
+            const classObj = studentData.classes.find(c => c.name === className);
+            classNotesTextarea.value = classObj ? classObj.notes : '';
+            classNotesModal.style.display = 'flex';
+        }
+
+        function saveClassNotes() {
+            const classObj = studentData.classes.find(c => c.name === selectedClassNameForNotes);
+            if (classObj) {
+                classObj.notes = classNotesTextarea.value;
+                saveData();
+                alert('Class notes saved!');
+            }
+        }
+
+
+        // --- Student Management Functions ---
+
+        /**
+         * Adds or updates a student in the roster.
+         * If a student with the same name exists, their classes are merged.
+         * Otherwise, a new student is added.
+         * @param {string} name - The name of the student.
+         * @param {string[]} classNames - An array of classes to assign.
+         * @returns {boolean} True if student was added/updated, false if input was invalid.
+         */
+        function addOrUpdateStudent(name, classNames) {
+            name = name.trim();
+            if (!name || classNames.length === 0) {
+                return false; // Indicate failure
+            }
+
+            const existingStudent = studentData.students.find(s => s.name === name);
+
+            if (existingStudent) {
+                // Student exists, merge classes
+                const updatedClassNames = Array.from(new Set([...existingStudent.classNames, ...classNames]));
+                existingStudent.classNames = updatedClassNames;
+                return true; // Indicate update
+            } else {
+                // New student
+                const newStudent = {
+                    id: crypto.randomUUID(),
+                    name: name,
+                    classNames: classNames,
+                    generalNotes: ''
+                };
+                studentData.students.push(newStudent);
+                return true; // Indicate addition
+            }
+        }
+
+
+        /**
+         * Removes a student from the roster and all tracking data.
+         * @param {string} studentId - The unique ID of the student to remove.
+         */
+        function removeStudent(studentId) {
+            // Remove from students array
+            studentData.students = studentData.students.filter(s => s.id !== studentId);
+
+            // Remove their data from tracking objects
+            delete studentData.participation[studentId];
+            delete studentData.noteTaking[studentId];
+            delete studentData.bellWork[studentId];
+        }
+
+        /**
+         * Loads students from a pasted roster.
+         */
+        function loadStudentsFromRoster() {
+            const rosterText = rosterInput.value.trim();
+            if (!rosterText) {
+                alert('Please paste student names into the roster input field.');
+                return;
+            }
+
+            const selectedClassNames = Array.from(rosterClassSelect.selectedOptions).map(option => option.value);
+            if (selectedClassNames.length === 0) {
+                alert('Please select at least one class to assign these students to.');
+                return;
+            }
+
+            const names = rosterText.split('\n').map(name => name.trim()).filter(name => name !== '');
+            let studentsAddedOrUpdatedCount = 0;
+
+            names.forEach(name => {
+                if (addOrUpdateStudent(name, selectedClassNames)) {
+                    studentsAddedOrUpdatedCount++;
+                }
+            });
+
+            // Sort students after bulk addition
+            studentData.students.sort((a, b) => {
+                const classA = a.classNames[0] || '';
+                const classB = b.classNames[0] || '';
+                if (classA < classB) return -1;
+                if (classA > classB) return 1;
+                if (a.name < b.name) return -1;
+                if (a.name > b.name) return 1;
+                return 0;
+            });
+
+            saveData();
+            renderRoster();
+            renderTrackingTable(activeTab);
+            rosterInput.value = ''; // Clear roster input
+            alert(`${studentsAddedOrUpdatedCount} student(s) processed from roster.`);
+        }
+
+        /**
+         * Renders (or re-renders) the student roster table based on the active class filter.
+         */
+        function renderRoster() {
+            studentRosterTableBody.innerHTML = ''; // Clear existing rows
+            selectedStudentIdsForDeletion.clear(); // Clear selections when roster is re-rendered
+            updateDeleteButtonState(); // Update delete button state
+            updateSelectAllCheckboxState(); // Reset select all checkbox
+
+            const selectedClass = classFilterSelect.value;
+            const filteredStudents = studentData.students.filter(student =>
+                selectedClass === 'all' || student.classNames.includes(selectedClass)
+            );
+
+            if (filteredStudents.length === 0) {
+                studentRosterTableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500 text-base">No students found for this class.</td></tr>`;
+                return;
+            }
+
+            filteredStudents.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-[var(--color-background-light)]';
+                const isSelected = selectedStudentIdsForDeletion.has(student.id);
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-base">
+                        <input type="checkbox" class="student-select-checkbox form-checkbox h-4 w-4 text-[var(--color-primary)] transition duration-150 ease-in-out" data-student-id="${student.id}" ${isSelected ? 'checked' : ''}>
+                    </td>
+                    <td class="sticky-column px-6 py-4 whitespace-nowrap text-base font-medium text-[var(--color-text-dark)]">${student.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-base text-gray-700">${student.classNames.join(', ')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-base font-medium">
+                        <button class="view-details-btn text-[var(--color-primary)] hover:text-[var(--color-button-hover)] font-semibold transition duration-200 mr-2" data-student-id="${student.id}">
+                            Details
+                        </button>
+                        <button class="remove-student-btn text-red-600 hover:text-red-800 font-semibold transition duration-200" data-student-id="${student.id}" data-student-name="${student.name}">
+                            Remove
+                        </button>
+                    </td>
+                `;
+                studentRosterTableBody.appendChild(row);
+            });
+
+            // Re-attach event listeners for checkboxes and buttons after rendering
+            document.querySelectorAll('.student-select-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', handleIndividualStudentSelect);
+            });
+            document.querySelectorAll('.remove-student-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const studentIdToRemove = e.target.dataset.studentId;
+                    const studentName = e.target.dataset.studentName;
+                    showConfirmationModal(`Are you sure you want to remove ${studentName}? This will delete all their data.`, () => {
+                        removeStudent(studentIdToRemove);
+                        saveData();
+                        renderRoster();
+                        renderTrackingTable(activeTab);
+                    });
+                };
+            });
+            document.querySelectorAll('.view-details-btn').forEach(button => {
+                button.onclick = (e) => {
+                    showStudentDetails(e.target.dataset.studentId);
+                };
+            });
+
+            updateSelectAllCheckboxState(); // Ensure select all is correctly set after rendering
+        }
+
+
+        // --- Period Generation Functions ---
+
+        /**
+         * Helper function to add a specified number of working days to a date, skipping weekends.
+         * @param {Date} date - The starting date.
+         * @param {number} days - The number of working days to add.
+         * @returns {Date} The new date after adding working days.
+         */
+        function addWorkingDays(date, days) {
+            let newDate = new Date(date);
+            let addedDays = 0;
+            while (addedDays < days) {
+                newDate.setDate(newDate.getDate() + 1);
+                // 0 is Sunday, 6 is Saturday
+                if (newDate.getDay() !== 0 && newDate.getDay() !== 6) {
+                    addedDays++;
+                }
+            }
+            return newDate;
+        }
+
+        /**
+         * Generates an array of date period strings for tracking.
+         * Covers the school year from August 2025 to May 2026.
+         * @param {string} type - 'participation', 'noteTaking', or 'bellWork'.
+         * @returns {string[]} An array of formatted date strings.
+         */
+        function generatePeriods(type) {
+            const periods = [];
+            const startYear = 2025;
+            const endYear = 2026;
+            const endMonthIndex = 4; // May (0-indexed)
+            const schoolYearEnd = new Date(endYear, endMonthIndex, 31); // Last day of May 2026
+
+            if (type === 'participation' || type === 'noteTaking') { // Apply same logic to noteTaking
+                // First specific period: Aug 11-22, 2025
+                periods.push(`Aug 11-22`);
+
+                // Start date for the period *after* Aug 11-22 (which is Aug 25, the next Monday)
+                let currentPeriodStart = new Date(2025, 7, 25); // August 25, 2025 (Monday)
+
+                while (currentPeriodStart <= schoolYearEnd) {
+                    // Ensure currentPeriodStart is a Monday (or valid weekday if it's the very end of the school year)
+                    // This handles cases where currentPeriodStart might land on a weekend due to addition logic
+                    while (currentPeriodStart.getDay() === 0 || currentPeriodStart.getDay() === 6) {
+                        currentPeriodStart.setDate(currentPeriodStart.getDate() + 1);
+                        if (currentPeriodStart > schoolYearEnd) break; // Stop if we go past end of school year
+                    }
+                    if (currentPeriodStart > schoolYearEnd) break; // Break if we passed the end after adjusting
+
+                    let periodEnd = addWorkingDays(currentPeriodStart, 9); // Add 9 more working days for a total of 10 weekdays
+                    
+                    // If the calculated periodEnd goes beyond the schoolYearEnd, cap it at schoolYearEnd
+                    if (periodEnd > schoolYearEnd) {
+                        periodEnd = schoolYearEnd;
+                    }
+                    // If, after capping, periodEnd is before currentPeriodStart, it means we don't have a valid period, so break
+                    if (periodEnd < currentPeriodStart) break;
+
+                    let periodString;
+                    // Format "Month Day-Day" or "Month1 Day-Month2 Day" if it spans months
+                    if (currentPeriodStart.getMonth() === periodEnd.getMonth() && currentPeriodStart.getFullYear() === periodEnd.getFullYear()) {
+                        periodString = `${currentPeriodStart.toLocaleString('default', { month: 'short' })} ${currentPeriodStart.getDate()}-${periodEnd.getDate()}`;
+                    } else {
+                        periodString = `${currentPeriodStart.toLocaleString('default', { month: 'short' })} ${currentPeriodStart.getDate()}-${periodEnd.toLocaleString('default', { month: 'short' })} ${periodEnd.getDate()}`;
+                    }
+                    periods.push(periodString);
+
+                    // Set the start date for the next period: the Monday after the current period's Friday end
+                    currentPeriodStart = new Date(periodEnd);
+                    currentPeriodStart.setDate(currentPeriodStart.getDate() + 1); // Move to next day (likely Sat)
+                    while (currentPeriodStart.getDay() === 0 || currentPeriodStart.getDay() === 6) { // Skip weekends
+                        currentPeriodStart.setDate(currentPeriodStart.getDate() + 1);
+                    }
+                }
+                return periods;
+
+            } else if (type === 'bellWork') { // Bell work is now monthly
+                let currentDate = new Date(startYear, 7, 1); // Start from August 1st, 2025
+                while (currentDate <= schoolYearEnd) {
+                    periods.push(`${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getFullYear()}`);
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+                return periods;
+            } else {
+                console.error("Unknown period type:", type);
+                return [];
+            }
+        }
+
+        // --- Tracking Table Rendering and Interaction ---
+
+        /**
+         * Updates a specific tracking data point and saves.
+         * @param {string} studentId - Unique ID of the student.
+         * @param {string} period - The date period string (e.g., "Jan 1-15", "Feb 2025").
+         * @param {string} type - 'participation', 'noteTaking', or 'bellWork'.
+         * @param {any} value - The new value for the data point.
+         */
+        function updateTrackingData(studentId, period, type, value) {
+            if (!studentData[type]) {
+                studentData[type] = {};
+            }
+            if (!studentData[type][studentId]) {
+                studentData[type][studentId] = {};
+            }
+            studentData[type][studentId][period] = value;
+            saveData();
+            console.log(`Updated ${type} for student ID ${studentId} for ${period} to: ${value}`);
+        }
+
+        /**
+         * Renders the dynamic tracking table based on the active tab type and selected class filter.
+         * @param {string} type - 'participation', 'noteTaking', or 'bellWork'.
+         */
+        function renderTrackingTable(type) {
+            trackingTableContainer.innerHTML = ''; // Clear previous table
+
+            const selectedClass = classFilterSelect.value;
+            const filteredStudents = studentData.students.filter(student =>
+                selectedClass === 'all' || student.classNames.includes(selectedClass)
+            );
+
+            if (filteredStudents.length === 0) {
+                trackingTableContainer.innerHTML = `<p class="p-4 text-gray-500 text-center text-base">No students found for this class or no students added yet.</p>`;
+                return;
+            }
+
+            const periods = generatePeriods(type); // Pass the type to generatePeriods
+            let tableHTML = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky-header">
+                        <tr>
+                            <th scope="col" class="sticky-column px-6 py-3 text-base font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">
+                                Student Name
+                            </th>`;
+            periods.forEach(period => {
+                tableHTML += `<th scope="col" class="px-4 py-3 text-base text-center font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">${period}</th>`;
+            });
+            tableHTML += `</tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">`;
+
+            filteredStudents.forEach(student => {
+                tableHTML += `<tr class="hover:bg-[var(--color-background-light)]">
+                                <td class="sticky-column px-6 py-4 whitespace-nowrap text-base font-medium text-[var(--color-text-dark)]">${student.name}</td>`;
+                periods.forEach(period => {
+                    const currentValue = studentData[type][student.id]?.[period] || '';
+                    const optionsArray = getOptionsArray(type);
+                    
+                    let optionClass = optionsArray.find(opt => opt.value === currentValue)?.class || 'status-na';
+                    
+                    tableHTML += `<td class="px-2 py-2 whitespace-nowrap text-base text-gray-900 text-center">`;
+                    tableHTML += `
+                        <select class="p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] w-full ${optionClass}"
+                            onchange="updateTrackingData('${student.id}', '${period}', '${type}', this.value); this.className = 'p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] w-full ' + getOptionsArray('${type}').find(opt => opt.value === this.value)?.class || 'status-na';">`;
+                    optionsArray.forEach(option => {
+                        tableHTML += `<option value="${option.value}" class="${option.class}" ${currentValue === option.value ? 'selected' : ''}>${option.value}</option>`;
+                    });
+                    tableHTML += `</select>`;
+                    tableHTML += `</td>`;
+                });
+                tableHTML += `</tr>`;
+            });
+            tableHTML += `</tbody>
+                </table>`;
+
+            trackingTableContainer.innerHTML = tableHTML;
+        }
+
+        // --- Student Details Modal Functions ---
+
+        /**
+         * Displays the student details modal for a given student.
+         * @param {string} studentId - The unique ID of the student.
+         */
+        function showStudentDetails(studentId) {
+            selectedStudentIdForDetails = studentId;
+            const student = studentData.students.find(s => s.id === studentId);
+
+            if (!student) {
+                alert('Student not found.');
+                return;
+            }
+
+            detailsModalStudentName.textContent = student.name;
+            detailsModalGeneralNotes.value = student.generalNotes;
+
+            // Populate assigned classes display
+            detailsModalAssignedClasses.innerHTML = '';
+            if (student.classNames.length === 0) {
+                detailsModalAssignedClasses.innerHTML = '<span class="text-gray-500 text-base">Not assigned to any class.</span>';
+            } else {
+                student.classNames.forEach(className => {
+                    const span = document.createElement('span');
+                    span.className = 'bg-blue-100 text-blue-800 text-base font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-2';
+                    span.textContent = className;
+                    detailsModalAssignedClasses.appendChild(span);
+                });
+            }
+
+            // Populate multi-select for managing classes
+            Array.from(detailsModalClassSelect.options).forEach(option => {
+                option.selected = student.classNames.includes(option.value);
+            });
+
+            // Render performance record for all tracking types
+            detailsModalPerformanceRecord.innerHTML = '';
+
+            // Helper function to calculate average for numeric scores (e.g., participation 1-5)
+            function calculateAverageScore(dataMap, options) {
+                let totalScore = 0;
+                let count = 0;
+                for (const period in dataMap) {
+                    const value = dataMap[period];
+                    const option = options.find(opt => opt.value === value);
+                    if (option && option.value !== 'N/A') {
+                        // Extract number from "X (Label)"
+                        const numericValue = parseInt(option.value.split(' ')[0]);
+                        if (!isNaN(numericValue)) {
+                            totalScore += numericValue;
+                            count++;
+                        }
+                    }
+                }
+                return count > 0 ? (totalScore / count).toFixed(1) : 'N/A';
+            }
+
+            // Helper function to count statuses and calculate percentages (e.g., note-taking, bell-work)
+            function calculateStatusMetrics(dataMap, options) {
+                const counts = {};
+                options.forEach(opt => counts[opt.value] = 0); // Initialize all possible status counts
+                let totalEntries = 0;
+
+                for (const period in dataMap) {
+                    const value = dataMap[period];
+                    if (options.some(opt => opt.value === value)) { // Ensure value is a recognized status
+                        counts[value]++;
+                        totalEntries++;
+                    }
+                }
+
+                const percentages = {};
+                for (const status in counts) {
+                    percentages[status] = totalEntries > 0 ? ((counts[status] / totalEntries) * 100).toFixed(0) : 0;
+                }
+                return { counts, percentages, totalEntries };
+            }
+
+
+            const performanceCategories = [
+                { id: 'participation', label: 'Participation', type: 'numeric', options: participationOptions },
+                { id: 'noteTaking', label: 'Note-Taking', type: 'status', options: noteTakingOptions },
+                { id: 'bellWork', label: 'Bell Work', type: 'status', options: bellWorkOptions }
+            ];
+
+            performanceCategories.forEach(category => {
+                const records = studentData[category.id][studentId] || {};
+                const periods = generatePeriods(category.id); // Use the correct period generation for each category
+                let summaryHtml = '';
+
+                if (category.type === 'numeric') {
+                    const average = calculateAverageScore(records, category.options);
+                    summaryHtml += `<p class="font-bold text-lg">Average Score: <span class="text-[var(--color-primary)]">${average}</span></p>`;
+                } else { // type === 'status'
+                    const { counts, percentages, totalEntries } = calculateStatusMetrics(records, category.options);
+                    if (totalEntries > 0) {
+                        category.options.forEach(opt => {
+                            if (counts[opt.value] > 0) {
+                                summaryHtml += `<p class="text-base">
+                                    <span class="font-semibold ${opt.class} p-1 rounded-sm">${opt.value}:</span> ${counts[opt.value]} (${percentages[opt.value]}%)
+                                </p>`;
+                            }
+                        });
+                        summaryHtml += `<p class="text-base mt-2">Total Entries: <span class="font-semibold">${totalEntries}</span></p>`;
+                    } else {
+                        summaryHtml += `<p class="text-base">No data recorded.</p>`;
+                    }
+                }
+
+                let recordListHtml = '';
+                if (Object.keys(records).length === 0) {
+                    recordListHtml += `<li>No data recorded.</li>`;
+                } else {
+                    periods.forEach(period => {
+                        const value = records[period] || 'N/A';
+                        const optionClass = category.options.find(opt => opt.value === value)?.class || '';
+                        recordListHtml += `<li class="mb-1"><span class="font-semibold">${period}:</span> <span class="${optionClass} p-1 rounded-sm">${value}</span></li>`;
+                    });
+                }
+
+                detailsModalPerformanceRecord.innerHTML += `
+                    <div class="bg-[var(--color-background-light)] p-4 rounded-lg shadow-sm border border-[var(--color-secondary)]">
+                        <h5 class="text-lg font-bold text-[var(--color-primary)] mb-2 uppercase">${category.label}</h5>
+                        ${summaryHtml}
+                        <h6 class="font-semibold mt-3 mb-1 text-gray-700 text-base">Detailed Records:</h6>
+                        <ul class="list-disc pl-5 text-base text-gray-700 max-h-40 overflow-y-auto">
+                            ${recordListHtml}
+                        </ul>
+                    </div>`;
+            });
+
+            studentDetailsModal.style.display = 'flex'; // Show modal
+        }
+
+        /**
+         * Updates a student's general notes.
+         */
+        function saveGeneralNotes() {
+            const student = studentData.students.find(s => s.id === selectedStudentIdForDetails);
+            if (student) {
+                student.generalNotes = detailsModalGeneralNotes.value;
+                saveData();
+                alert('General notes saved!');
+            }
+        }
+
+        /**
+         * Updates a student's assigned classes based on the multi-select dropdown.
+         */
+        function updateStudentClasses() {
+            const student = studentData.students.find(s => s.id === selectedStudentIdForDetails);
+            if (student) {
+                const selectedOptions = Array.from(detailsModalClassSelect.selectedOptions).map(option => option.value);
+                student.classNames = selectedOptions;
+                saveData();
+                renderRoster(); // Roster needs to update class display
+                renderTrackingTable(activeTab); // Tracking table filter might change
+                showStudentDetails(selectedStudentIdForDetails); // Re-render modal to show updated classes
+                alert('Classes updated successfully!');
+            }
+        }
+
+        // --- Custom Confirmation Modal ---
+        function showConfirmationModal(message, onConfirm) {
+            const modalId = 'confirmationModal';
+            const modal = document.getElementById(modalId);
+            const modalMessage = document.getElementById('modal-message');
+            const confirmButton = document.getElementById('confirmButton');
+            const cancelButton = document.getElementById('cancelButton');
+
+            modalMessage.textContent = message;
+            modal.style.display = 'flex'; // Show modal
+
+            // Clear previous listeners to prevent multiple calls
+            confirmButton.onclick = null;
+            cancelButton.onclick = null;
+
+            confirmButton.onclick = () => {
+                onConfirm();
+                modal.style.display = 'none';
+            };
+
+            cancelButton.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+
+        // --- Mass Delete Functions ---
+
+        /**
+         * Handles the change event for the "Select All" checkbox.
+         * Selects or deselects all student checkboxes based on its state.
+         */
+        function handleSelectAllStudents(event) {
+            const isChecked = event.target.checked;
+            const checkboxes = document.querySelectorAll('.student-select-checkbox');
+            const selectedClass = classFilterSelect.value;
+            
+            checkboxes.forEach(checkbox => {
+                const studentId = checkbox.dataset.studentId;
+                const student = studentData.students.find(s => s.id === studentId);
+
+                // Only apply to visible (filtered) students
+                if (student && (selectedClass === 'all' || student.classNames.includes(selectedClass))) {
+                    checkbox.checked = isChecked;
+                    if (isChecked) {
+                        selectedStudentIdsForDeletion.add(studentId);
+                    } else {
+                        selectedStudentIdsForDeletion.delete(studentId);
+                    }
+                }
+            });
+            updateDeleteButtonState();
+        }
+
+        /**
+         * Handles the change event for individual student checkboxes.
+         * Updates the set of selected student IDs and the "Select All" checkbox state.
+         */
+        function handleIndividualStudentSelect(event) {
+            const studentId = event.target.dataset.studentId;
+            if (event.target.checked) {
+                selectedStudentIdsForDeletion.add(studentId);
+            } else {
+                selectedStudentIdsForDeletion.delete(studentId);
+            }
+            updateDeleteButtonState();
+            updateSelectAllCheckboxState();
+        }
+
+        /**
+         * Updates the disabled state of the "Delete Selected Students" button.
+         */
+        function updateDeleteButtonState() {
+            deleteSelectedBtn.disabled = selectedStudentIdsForDeletion.size === 0;
+        }
+
+        /**
+         * Updates the state of the "Select All" checkbox (checked, unchecked, indeterminate).
+         */
+        function updateSelectAllCheckboxState() {
+            const checkboxes = document.querySelectorAll('.student-select-checkbox');
+            const totalDisplayedStudents = Array.from(checkboxes).filter(checkbox => {
+                const studentId = checkbox.dataset.studentId;
+                const student = studentData.students.find(s => s.id === studentId);
+                const selectedClass = classFilterSelect.value;
+                return student && (selectedClass === 'all' || student.classNames.includes(selectedClass));
+            }).length;
+
+            const selectedDisplayedStudents = Array.from(checkboxes).filter(checkbox => checkbox.checked).length;
+
+            if (totalDisplayedStudents === 0) {
+                selectAllStudentsCheckbox.checked = false;
+                selectAllStudentsCheckbox.indeterminate = false;
+            } else if (selectedDisplayedStudents === totalDisplayedStudents) {
+                selectAllStudentsCheckbox.checked = true;
+                selectAllStudentsCheckbox.indeterminate = false;
+            } else if (selectedDisplayedStudents > 0) {
+                selectAllStudentsCheckbox.checked = false;
+                selectAllStudentsCheckbox.indeterminate = true;
+            } else {
+                selectAllStudentsCheckbox.checked = false;
+                selectAllStudentsCheckbox.indeterminate = false;
+            }
+        }
+
+        /**
+         * Initiates the mass deletion of selected students after confirmation.
+         */
+        function deleteSelectedStudents() {
+            const count = selectedStudentIdsForDeletion.size;
+            if (count === 0) return; // Should be disabled, but a safety check
+
+            showConfirmationModal(`Are you sure you want to delete ${count} selected student(s)? This action cannot be undone.`, () => {
+                // Convert Set to Array to iterate and delete
+                const idsToDelete = Array.from(selectedStudentIdsForDeletion);
+                idsToDelete.forEach(id => {
+                    removeStudent(id); // Use the existing removeStudent function
+                });
+                
+                selectedStudentIdsForDeletion.clear(); // Clear the selection set
+                saveData(); // Save changes after all deletions
+                renderRoster(); // Re-render everything affected
+                renderTrackingTable(activeTab); // Re-render tracking table
+                alert(`${count} student(s) deleted successfully.`);
+            });
+        }
+
+
+        // --- Collapsible Section Functions ---
+
+        /**
+         * Toggles the collapsed state of a section and updates local storage.
+         * @param {string} contentId - The ID of the content div to collapse/expand.
+         * @param {string} sectionKey - The key to use for local storage (e.g., 'manageClasses').
+         */
+        function toggleSection(contentId, sectionKey) {
+            const contentDiv = document.getElementById(contentId);
+            const toggleButton = document.querySelector(`.collapse-toggle[data-target="${contentId}"] .arrow-icon`);
+
+            if (!contentDiv || !toggleButton) return;
+
+            const isCollapsed = contentDiv.classList.toggle('collapsed');
+            
+            if (isCollapsed) {
+                contentDiv.style.maxHeight = '0';
+                toggleButton.innerHTML = '&#9650;'; // Up arrow
+            } else {
+                // Set to scrollHeight to animate to full height
+                contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                toggleButton.innerHTML = '&#9660;'; // Down arrow
+                // After animation, set to 'none' to allow content to grow dynamically
+                setTimeout(() => {
+                    if (!contentDiv.classList.contains('collapsed')) { // Only if not collapsed again during animation
+                        contentDiv.style.maxHeight = 'none';
+                    }
+                }, 300); // Match transition duration in CSS
+            }
+            localStorage.setItem(`section-${sectionKey}-collapsed`, isCollapsed);
+        }
+
+        /**
+         * Restores the collapsed state of sections from local storage on app initialization.
+         */
+        function restoreSectionStates() {
+            document.querySelectorAll('.section-content').forEach(contentDiv => {
+                const sectionKey = contentDiv.closest('section').dataset.section;
+                if (!sectionKey) return; // Skip if section doesn't have a data-section attribute
+
+                const isCollapsed = localStorage.getItem(`section-${sectionKey}-collapsed`) === 'true';
+                const toggleButton = document.querySelector(`.collapse-toggle[data-target="${contentDiv.id}"] .arrow-icon`);
+
+                if (isCollapsed) {
+                    contentDiv.classList.add('collapsed');
+                    contentDiv.style.maxHeight = '0';
+                    if (toggleButton) toggleButton.innerHTML = '&#9650;'; // Up arrow
+                } else {
+                    contentDiv.style.maxHeight = 'none'; // Ensure it's fully expanded
+                    if (toggleButton) toggleButton.innerHTML = '&#9660;'; // Down arrow
+                }
+            });
+        }
+
+        // --- Dancing Heads Logic ---
+        function handleHeadClick(event) {
+            const head = event.target;
+            // Remove 'dancing' class after animation ends to allow re-triggering
+            head.classList.remove('dancing');
+            // Force reflow to restart animation (hacky but effective)
+            void head.offsetWidth; 
+            head.classList.add('dancing');
+        }
+
+
+        // --- Initialization and Event Listeners ---
+
+        /**
+         * Initializes the application on page load.
+         */
+        function initApp() {
+            studentData = loadData();
+            renderClasses(); // Render classes first to populate dropdowns
+            renderRoster();
+            // Initially render the default active tab
+            renderTrackingTable(activeTab);
+            // Highlight the active tab button
+            document.getElementById('tabParticipation').classList.add('bg-[var(--color-button-active)]', 'text-white', 'active-tab');
+            document.getElementById('tabParticipation').classList.remove('bg-[var(--color-button-normal)]', 'text-white');
+
+            // Set filter select to 'all' on init if no specific class is pre-selected
+            if (!studentData.classes.some(c => c.name === classFilterSelect.value)) { // Check if the selected class still exists
+                 classFilterSelect.value = 'all';
+            }
+            restoreSectionStates(); // Restore collapsible section states
+
+            // Attach event listeners to dancing heads
+            pixelHeads.forEach(head => {
+                head.addEventListener('click', handleHeadClick);
+                // Listen for animation end to remove the class, so it can be re-triggered
+                head.addEventListener('animationend', () => {
+                    head.classList.remove('dancing');
+                });
+            });
+        }
+
+        // Class management event listeners
+        addClassBtn.addEventListener('click', () => {
+            addClass(newClassNameInput.value);
+        });
+
+        newClassNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addClass(newClassNameInput.value);
+            }
+        });
+
+        // Event delegation for dynamically added remove class buttons
+        classListTableBody.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-class-btn')) {
+                const classToRemove = e.target.dataset.class;
+                showConfirmationModal(`Are you sure you want to remove the class "${classToRemove}"? This will delete all students' association with this class and their data if they are not assigned to any other class.`, () => {
+                    removeClass(classToRemove);
+                });
+            } else if (e.target.classList.contains('view-class-notes-btn')) {
+                const className = e.target.dataset.class;
+                showClassNotes(className);
+            }
+        });
+
+        // Add student event listener (for individual student)
+        addStudentBtn.addEventListener('click', () => {
+            const studentName = newStudentNameInput.value;
+            // Get all selected options from the multi-select
+            const selectedClassNames = Array.from(studentClassSelect.selectedOptions).map(option => option.value);
+            if (addOrUpdateStudent(studentName, selectedClassNames)) {
+                 alert('Student added or updated successfully!');
+            } else {
+                 alert('Please enter student name and select at least one class.');
+            }
+            newStudentNameInput.value = ''; // Clear input
+            Array.from(studentClassSelect.options).forEach(option => option.selected = false); // Deselect all options
+            saveData(); // Save changes after adding/updating
+            renderRoster(); // Re-render roster
+            renderTrackingTable(activeTab); // Re-render tracking table
+        });
+
+
+        newStudentNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const studentName = newStudentNameInput.value;
+                const selectedClassNames = Array.from(studentClassSelect.selectedOptions).map(option => option.value);
+                if (addOrUpdateStudent(studentName, selectedClassNames)) {
+                     alert('Student added or updated successfully!');
+                } else {
+                     alert('Please enter student name and select at least one class.');
+                }
+                newStudentNameInput.value = ''; // Clear input
+                Array.from(studentClassSelect.options).forEach(option => option.selected = false); // Deselect all options
+                saveData(); // Save changes after adding/updating
+                renderRoster(); // Re-render roster
+                renderTrackingTable(activeTab); // Re-render tracking table
+            }
+        });
+
+        // Load Roster button event listener
+        loadRosterBtn.addEventListener('click', loadStudentsFromRoster);
+
+        // Tab switching event listeners
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active styling from all tabs
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('bg-[var(--color-button-active)]', 'text-white', 'active-tab');
+                    btn.classList.add('bg-[var(--color-button-normal)]', 'text-white');
+                });
+                // Add active styling to clicked tab
+                button.classList.add('bg-[var(--color-button-active)]', 'text-white', 'active-tab');
+                button.classList.remove('bg-[var(--color-button-normal)]', 'text-white');
+
+                activeTab = button.dataset.type;
+                renderTrackingTable(activeTab);
+            });
+        });
+
+        // Student Details Modal event listeners
+        closeDetailsModal.addEventListener('click', () => {
+            studentDetailsModal.style.display = 'none';
+            selectedStudentIdForDetails = null;
+        });
+        closeDetailsModalBottom.addEventListener('click', () => {
+            studentDetailsModal.style.display = 'none';
+            selectedStudentIdForDetails = null;
+        });
+        saveGeneralNotesBtn.addEventListener('click', saveGeneralNotes);
+        updateStudentClassesBtn.addEventListener('click', updateStudentClasses);
+
+        // Class Notes Modal event listeners
+        closeClassNotesModal.addEventListener('click', () => {
+            classNotesModal.style.display = 'none';
+            selectedClassNameForNotes = null;
+        });
+        saveClassNotesBtn.addEventListener('click', saveClassNotes);
+
+        // Mass Delete Event Listeners
+        selectAllStudentsCheckbox.addEventListener('change', handleSelectAllStudents);
+        deleteSelectedBtn.addEventListener('click', deleteSelectedStudents);
+
+        // Collapsible sections event listeners
+        collapseToggles.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                const sectionKey = button.closest('section').dataset.section; 
+                toggleSection(targetId, sectionKey);
+            });
+        });
+
+
+        // Run initialization when the DOM is fully loaded
+        window.onload = initApp;
+    </script>
+</body>
+</html>
